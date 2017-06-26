@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import dill as pickle
 from types import FunctionType
 import warnings
@@ -9,6 +11,7 @@ class MalformedTestCase(Exception):
 
 
 class TestCase(object):
+    """TestCase."""
 
     def __init__(self, _input, _output, assert_function):
         self.input = _input
@@ -37,6 +40,7 @@ class TestCase(object):
 
 
 class TestSet(object):
+    """TestSet."""
 
     def __init__(self):
         self.test_cases = []
@@ -60,10 +64,21 @@ class TestSet(object):
         self.test_cases.append(test_case)
 
     def load(self, file_name):
-        with open(file_name, 'rb') as file:
-            self.test_cases = pickle.load(file)
+        if not file_name.endswith('.test'):
+            warnings.warn('TestSet.load error: file must be .test file format.')
+        try:
+            with open(file_name, 'rb') as file:
+                self.test_cases = pickle.load(file)
+        except Exception as err:
+            cls_err = err.__class__.__name__
+            warnings.warn('TestSet.load {0} error: {1}'.format(cls_err, err))
 
     def save(self, file_name):
-        with open(file_name, 'wb') as file:
-            pickle.dump(self.test_cases, file)
-
+        if not file_name.endswith('.test'):
+            warnings.warn('TestSet.save error: file must be .test file format.')
+        try:
+            with open(file_name, 'wb') as file:
+                pickle.dump(self.test_cases, file)
+        except Exception as err:
+            cls_err = err.__class__.__name__
+            warnings.warn('TestSet.save {0} error: {1}'.format(cls_err, err))
