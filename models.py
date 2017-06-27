@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+import timeit
+import functools
 import dill as pickle
 from types import FunctionType
 import warnings
@@ -25,15 +27,18 @@ class TestCase(object):
     def evaluate(self, function):
         if isinstance(self.input, dict):
             try:
+                # timeit.Timer(functools.partial(function, **self.input)).timeit(number=3)
                 evaluation = self.assert_function(function(**self.input), self.output)
             except TypeError:
                 _input = [val for _, val in self.input.items()]
+                # timeit.Timer(functools.partial(func, *input)).timeit(number=3)
                 evaluation = self.assert_function(function(*_input), self.output)
                 warnings.warn("Function '{func_name}' have different arguments than those defined in "
                               "TestCase. Using them as *args."
                               .format(func_name=function.__name__),
                               stacklevel=4)
         else:
+            # timeit.Timer(functools.partial(function, self.input)).timeit(number=3)
             evaluation = self.assert_function(function(self.input), self.output)
 
         return evaluation
@@ -64,21 +69,49 @@ class TestSet(object):
         self.test_cases.append(test_case)
 
     def load(self, file_name):
-        if not file_name.endswith('.test'):
-            warnings.warn('TestSet.load error: file must be .test file format.')
-        try:
-            with open(file_name, 'rb') as file:
-                self.test_cases = pickle.load(file)
-        except Exception as err:
-            cls_err = err.__class__.__name__
-            warnings.warn('TestSet.load {0} error: {1}'.format(cls_err, err))
+        with open(file_name, 'rb') as file:
+            self.test_cases = pickle.load(file)
 
     def save(self, file_name):
-        if not file_name.endswith('.test'):
-            warnings.warn('TestSet.save error: file must be .test file format.')
-        try:
-            with open(file_name, 'wb') as file:
-                pickle.dump(self.test_cases, file)
-        except Exception as err:
-            cls_err = err.__class__.__name__
-            warnings.warn('TestSet.save {0} error: {1}'.format(cls_err, err))
+        with open(file_name, 'wb') as file:
+            pickle.dump(self.test_cases, file)
+            
+import pickle as pkl
+
+class model(dict):
+    def __init__( self ):
+        pass
+
+    def addFuntion( self, id): 
+        self[id] = []
+
+    def deleteFunction( self, id ):   
+        del self[id]
+
+    def saveDict( self ): 
+        print (type(self))
+        pkl.dump( dict(self), open( "model.dict", "wb" ) )
+
+    def loadDict( self ): 
+        print ('Before upacking model.dic, self ==',type(self))
+        self = pkl.load( open( "model.dict", "rb" ) ) 
+        print ('After upacking model.dic, self ==',type(self))
+        
+    def appendInput( self, id, val):
+        self[id].append(val)
+        
+    def updateAllInput( self, id, val):
+        self.update({id:val})
+    
+    def updateInput( self, id, id_input, val):
+        self[id][id_input]=val
+
+#if __name__ == '__main__':
+#    model = model()
+#    #uncomment after first run
+#    model.load()
+#    print(model)
+#    #comment after first run
+#    model.add( 'South Park', 'Comedy Central1' )
+#    model.save()
+
